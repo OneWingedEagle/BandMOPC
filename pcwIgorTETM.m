@@ -11,19 +11,20 @@ clc
 
 %mode=0  defines the TE mode and mode=1 defines TM mode %
 mode=0
-a=1e-6;
+a=1.17e-6;
 %The variable r contains elements radius. Here it is defined as a part of the period.
 
-r=0.4*a;
+%r=0.4*a;
+r=0.504e-6;
 
 %The variable eps1 contains the information about the relative background material permittivity.
-Eps1=1;
+Eps1=2.72;
 
 %The variable eps2 contains the information about permittivity of the elements composing PhC.
-Eps2=5.6;
+Eps2=1;
 
 %Variable numElem defines the number of PhC elements
-numElem=1;
+numElem=2;
 
 %Number of holes missed
 numDef=0;
@@ -32,18 +33,17 @@ numDef=0;
 kx=0;
 %kx=0:(pi/a)/10:pi/a;
 
-color='r';
+color='-r';
 if(mode==1)
-    color='b';
+    color='ob';
 end
 
 
 PWE(mode, a, r, Eps1, Eps2, numElem, numDef, kx,color, 2);
-numElem=1;
-numDef=0;
+
 
 mode=1;
-color='b';
+color='-b';
 
 PWE(mode, a, r, Eps1, Eps2, numElem, numDef, kx,color, 2);
 %Setting transversal wave vector to a range of values within Brillouin zone
@@ -57,7 +57,7 @@ function PWE(mode, a, r, Eps1, Eps2, numElem,numDefect, kx_param, color, linewid
 precis=15;
 %The variable nG defines the number of plane waves.
 %total number of plane waves may be determined as (nG*2-1)^2
-nG=5;
+nG=1;
 
 %kapth segments 1: gama to X, 2: Gama to M, 3: whole path
 nKpath=3;

@@ -3,10 +3,6 @@
 % MATLAB Program for Computation of Dispersion Diagrams of 2D PhC Waveguide
 
 function PhC_waveguide
-  
-global old;
-  
-  old=0;
 %The program for the computation of the dispersion
 %characteristic of the PhC waveguide based upon 2D PhC with square latice
 clear all
@@ -16,9 +12,10 @@ clc
 % The variable mode defines mode of the wave.
 
 % The variable a defines the period of the structure %
-a=1e-6
+a=1.17e-6
 
 %The variable r contains elements radius. Here it is defined as a part of the period.
+%r=.726*a;
 r=0.504e-6
 
 %The variable epsb and Mub contains the information about permittivity of the background.
@@ -41,7 +38,7 @@ if(norm(gyrDir1)>0)
 end
 
 %Variable numElem defines the number of PhC elements
-numElem=2;
+numElem=4;
 
 %Number of holes missed
 numDef=0;
@@ -51,7 +48,7 @@ precis=15;
 
 %The variable nG defines the number of plane waves.
 %total number of plane waves may be determined as (nG*2-1)^2
-nG=2
+nG=3;
 
 %Setting transversal wave vector to a single value
 kx=0;
@@ -59,41 +56,34 @@ kx=0;
 %kapth segments 1: gama to X, 2: Gama to M, 3: whole path
 nKpath=3;
 
-color='-k'
 
-PWE(a, r, Epsb, Epsa, Epsd,gyra,gyrb,gyrd,gyrDir, numElem, numDef,nG,nKpath,precis, kx,color, 2);
+PWE(a, r, Epsb, Epsa, Epsd,gyra,gyrb,gyrd,gyrDir, numElem, numDef,nG,nKpath,precis, kx,'k', 1);
+
+
 
 %Setting transversal wave vector to a range of values within Brillouin zone
 kx=0:(pi/a)/2:pi/a;
 
-gyra=0;
-gyrb=0;
+gyra=.0;
+gyrb=0.0;
 gyrd=0;
 
-%PWE(a, r, Epsb, Epsa, Epsd,gyra,gyrb,gyrd,gyrDir, numElem, numDef,nG,nKpath,precis, kx,'k', 1);
 
 
 
-function PWE(a, r,Epsb, Epsa, Epsd,gyra,gyrb,gyrd,gyrDir, numElem,numDefect,nG,nKpath,precis, kx_param, color , linewidth)
-    
-    
-    
-  global Kappa;
-  
-  
+
+ function PWE(a, r,Epsb, Epsa, Epsd,gyra,gyrb,gyrd,gyrDir, numElem,numDefect,nG,nKpath,precis, kx_param, color , linewidth)
+
+ 
+        
         nGx=nG*numElem;
         nGy=nG;
         % nGx and nGy define the number of plane waves in x and y direction
         % respectively
-        
+
         cmp=3;
-        %discretization mesh elements. each cell is discretized to a grid of
-        %ngrid*ngrid square elememts for numerical compuation of Fourier series.
+
         
-        ngrid=60;
-        
-        epsTensInv=zeros(cmp,cmp,ngrid,ngrid);
-       
         %Defining the k-path within the Brilluoin zone.
         kxm=pi/a;
         dkx=kxm/precis;
@@ -121,18 +111,39 @@ function PWE(a, r,Epsb, Epsa, Epsd,gyra,gyrb,gyrd,gyrDir, numElem,numDefect,nG,n
             Nk=Nk+1;
         end
         
-         
+        
         
         bx=2*pi/a/numElem;
         by=2*pi/a;
-        
+  
+global Kappa;  
         Kappa=zeros(cmp,cmp,4*nGx+1,4*nGy+1);
+        %OFFDIAG=zeros(4*nGx+1,4*nGy+1);
+        %The next loop computes the Fourier expansion coefficients
+       
+        L=numElem*a;
         
-        old=1;
-        
-        if(old)
+        epsa=[Epsa 0 -1i*gyra;0 Epsa 0;1i*gyra 0 Epsa ];
 
- 
+        epsb=[Epsb 0 -1i*gyrb;0 Epsb 0;1i*gyrb 0 Epsb ];
+        
+        invepsa=inv(epsa)
+        invepsb=inv(epsb)
+        
+   
+        old=1;
+     
+     if(old) 
+     color='-r'
+
+             
+        %discretization mesh elements. each cell is discretized to a grid of
+        %ngrid*ngrid square elememts for numerical compuation of Fourier series.
+        
+        ngrid=30;
+        
+        epsTensInv=zeros(cmp,cmp,ngrid,ngrid);
+        
         %The following loop carries out the definition of the unit cell.
         for n=0:numElem-1
             nx=1;
@@ -179,43 +190,56 @@ function PWE(a, r,Epsb, Epsa, Epsd,gyra,gyrb,gyrd,gyrDir, numElem,numDefect,nG,n
             end
         end
         
-                MtNt=(length(xSet)-1)*(length(ySet)-1);
 
+        MtNt=(length(xSet)-1)*(length(ySet)-1);
+
+
+        ff=pi*r*r/(a*a);
+ for dGx=-2*nGx:2*nGx
+    Gn=2*pi*dGx/L;
+    for dGy=-2*nGy:2*nGy
+        Gm=dGy*2*pi/a;
+        GnmR=sqrt(Gn*Gn+Gm*Gm)*r;
+        dGxp=dGx+1+2*nGx;
+        dGyp=dGy+1+2*nGy;
         
-        %The next loop computes the Fourier expansion coefficients
-        for dGx=-2*nGx:2*nGx
-            for dGy=-2*nGy:2*nGy
-                dGxp=dGx+1+2*nGx;
-                dGyp=dGy+1+2*nGy;
-                
-                for nx=1:length(xSet)-1
-                    for ny=1:length(ySet)-1
-                        x=xSet(nx);
-                        y=ySet(ny);
-                        tt=dGx*bx*x+dGy*by*y;
-                        
-                        Kappa(:,:,dGxp,dGyp)=Kappa(:,:,dGxp,dGyp)+epsTensInv(:,:,nx,ny)*exp(-1i*(tt));
-                        
-                    end
+        if(dGx==0&& dGy==0)
+            for j=1:3
+                for k=1:3
+                  Kappa(j,k,dGxp,dGyp)=(invepsb(j,k)+ff*(invepsa(j,k)-invepsb(j,k)))/(numElem);
+                  
                 end
-                
-                
+             
             end
+            
+         else
+            tt=ff*besselj(1,GnmR)/GnmR;
+           
+           for j=1:3
+               for k=1:3
+                  Kappa(j,k,dGxp,dGyp)=tt*(invepsa(j,k)-invepsb(j,k))/(numElem/2);;
+
+            end
+           
+            end
+          
+            
         end
         
         
-        Kappa= Kappa/MtNt;
+    end
+end
+
+else
+
+
+  color='-k'
+      
         
-      else
-        
-epsb=[Epsb 0 -1i*gyrb;0 Epsb 0;1i*gyrb 0 Epsb ];
+FillKapaCylinderDef(nGx,nGy,epsa,epsb,L,r,numElem,a,a,0);
 
-epsa=[Epsa 0 -1i*gyra;0 Epsa 0;1i*gyra 0 Epsa ];
-
-L=numElem*a;
-
-        FillKapaCylinderDef(nGx,nGy,epsa,epsb,L,r,numElem,a,a,0)
-        end
+end
+      
         
         numG=0;
         for Gx=-nGx:nGx
@@ -283,6 +307,7 @@ L=numElem*a;
         t1=cputime;
     
         %The computation of eigen-states is also carried
+        
         disp('size kv')
         size(kv,1);
         for countK=1:size(kv,1)
@@ -311,6 +336,7 @@ L=numElem*a;
         
         if(Nk>1)
             for i=1:size(V)
+              dispe(i,2)
                 if(dispe(i,2)<1e-4)
                     nz=nz+1;
                 end;
@@ -318,7 +344,6 @@ L=numElem*a;
         end
 
 nCurve=15;
-
 
 figure(1);
 hold on;
@@ -330,6 +355,7 @@ hold on;
      end;
     
     for u=nz+1:nz+nCurve
+      if(u-nz!=-2 && u-nz!=-4)
   yy(1:Nk)=zeros(Nk,1);
      yy(1)=dispe(u,1);
           
@@ -347,14 +373,14 @@ hold on;
     
     kindex=1:length(yy);
     plot(kindex,yy,color,'LineWidth',linewidth);
-    
+    end
     end
  
 
 ylabel('Frequency \omegaa/2\pic','FontSize',18);
 xlabel('Propagation constant \beta, m^{-1}','FontSize',18);
 title('The dispersion diagram of the PhC waveguide','FontSize',10)
-axis([1,Nk,0,1.2]);
+axis([1,Nk,0,1.0]);
 
 grid on;
 str={'Gamma','X','M','Gamma'};
